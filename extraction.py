@@ -32,7 +32,7 @@ def list_to_str(l, lang):
         sep=' '
     return sep.join(l)
 
-def extract_FEs(sentences, language):
+def extract_FEs(sentences, language, minimum_frequency=3):
     languages={'ja': 'ja_core_news_lg', 'fi': 'spacy_fi_experimental_web_md'}
     nlp=spacy.load(languages[language])
     ngrams_per_sentence=[]
@@ -99,5 +99,8 @@ def extract_FEs(sentences, language):
         if FE not in FEs:
             FEs[FE]=0
         FEs[FE]+=1
+    for k in list(FEs.keys()):
+        if FEs[k]<minimum_frequency:
+            del FEs[k]
     return FEs
             
