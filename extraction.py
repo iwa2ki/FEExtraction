@@ -2,11 +2,13 @@ import sys
 
 import spacy
 
-def create_ngrams(list_words, minimum_length=3):
+def create_ngrams(list_words, minimum_length=3, maximum_length=10):
     ngrams=[]
     if len(list_words)>=minimum_length:
         for start in range(0, len(list_words)-minimum_length+1):
             for length in range(minimum_length, len(list_words)-start+1):
+                if length>maximum_length:
+                    break
                 ngrams.append((list_words[start:start+length], (start, start+length)))
     return ngrams
 
@@ -15,7 +17,7 @@ def acceptable(candidates, frequency, minimum=3):
     for candidate in sorted(candidates, reverse=True, key=lambda x: len(x[0])):
         key=list_to_str(candidate[0])
         if key not in frequency:
-            sys.stderr("{} was not found in ngrams.".format(key))
+            #sys.stderr("{} was not found in ngrams.".format(key))
             continue
         if len(maximum[0][0]) > len(candidate[0]):
             break
@@ -39,6 +41,7 @@ def extract_FEs(sentences, language, minimum_frequency=3):
     ngrams_per_sentence=[]
     ngrams_root_per_sentence=[]
     ngrams={}
+    debug=[0, len(sentences)]
     for sentence in sentences:
         doc=nlp(sentence)
         sentence_ngram=[]
@@ -52,7 +55,10 @@ def extract_FEs(sentences, language, minimum_frequency=3):
                 continue
             if token.ent_iob_!='O':
                 if len(ngram_stack)!=0:
-                    ngram_combination=create_ngrams(ngram_stack) # [([ngram], (start, start+length))]
+                    if language=='ja':
+                        ngram_combination=create_ngrams(ngram_stack, 5) # [([ngram], (start, start+length))]
+                    else:
+                        ngram_combination=create_ngrams(ngram_stack) # [([ngram], (start, start+length))]
                     for ngram, pos in ngram_combination:
                         ngram=list_to_str(ngram)
                         if ngram not in ngrams:
@@ -77,7 +83,10 @@ def extract_FEs(sentences, language, minimum_frequency=3):
                 sentence_ngram.extend(ngram_combination)
         ngrams_per_sentence.append(sentence_ngram)
         ngrams_root_per_sentence.append(sentence_ngram_root)
+        debug[0]+=1
+        print("{}/{}".format(debug[0], debug[1]), file=sys.stderr)
     FEs={}
+    debug=[0, len(ngrams_per_sentence)]
     for i, sentence_ngram in enumerate(ngrams_per_sentence):
         sentence_root_ngram=ngrams_root_per_sentence[i] # [ngram, (start, start+length)]
         longest_FE, pos0=acceptable(sentence_ngram, ngrams)
@@ -102,6 +111,8 @@ def extract_FEs(sentences, language, minimum_frequency=3):
         if FE not in FEs:
             FEs[FE]=0
         FEs[FE]+=1
+        debug[0]=i
+        print("{}\{}".format(debug[0], debug[1]), file=sys.stderr)
     for k in list(FEs.keys()):
         if FEs[k]<minimum_frequency:
             del FEs[k]
