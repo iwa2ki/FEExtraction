@@ -1,6 +1,6 @@
 import sys
 
-import extraction
+import extraction_light as extraction
 
 def main(path, lang, output):
     sentences=[]

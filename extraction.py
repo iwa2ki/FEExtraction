@@ -2,7 +2,7 @@ import sys
 
 import spacy
 
-def create_ngrams(list_words, minimum_length=3, maximum_length=10):
+def create_ngrams(list_words, minimum_length=4, maximum_length=10):
     ngrams=[]
     if len(list_words)>=minimum_length:
         for start in range(0, len(list_words)-minimum_length+1):
@@ -36,7 +36,7 @@ def list_to_str(l, lang='default'):
     return sep.join(l)
 
 def extract_FEs(sentences, language, minimum_frequency=3):
-    languages={'ja': 'ja_core_news_lg', 'fi': 'spacy_fi_experimental_web_md'}
+    languages={'ja': 'ja_core_news_lg', 'fi': '../train_spacy/fi-ner/model-last/'}
     nlp=spacy.load(languages[language])
     ngrams_per_sentence=[]
     ngrams_root_per_sentence=[]
@@ -70,7 +70,10 @@ def extract_FEs(sentences, language, minimum_frequency=3):
                     ngram_stack=[]
                 root_flag=False
                 continue
-            ngram_stack.append(token.text)
+            if language in ['ja']:
+                ngram_stack.append(token.text)
+            else:
+                ngram_stack.append(token.lower_)
         if len(ngram_stack)!=0:
             ngram_combination=create_ngrams(ngram_stack)
             for ngram, pos in ngram_combination:
@@ -112,7 +115,7 @@ def extract_FEs(sentences, language, minimum_frequency=3):
             FEs[FE]=0
         FEs[FE]+=1
         debug[0]=i
-        print("{}\{}".format(debug[0], debug[1]), file=sys.stderr)
+        print("{}/{}".format(debug[0], debug[1]), file=sys.stderr)
     for k in list(FEs.keys()):
         if FEs[k]<minimum_frequency:
             del FEs[k]
