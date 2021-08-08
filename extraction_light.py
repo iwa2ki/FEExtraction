@@ -40,7 +40,6 @@ def extract_FEs(sentences, language, minimum_frequency=3):
     languages={'ja': 'ja_core_news_lg', 'fi': 'spacy_fi_experimental_web_md'}
     nlp=spacy.load(languages[language], disable=['parser', 'ner', 'textcat'])
     ngrams={}
-    spacy_sentences=[]
     debug=[0, len(sentences)]
     for sentence in sentences:
         doc=nlp(sentence)
@@ -66,10 +65,10 @@ def extract_FEs(sentences, language, minimum_frequency=3):
         if debug[0] % 100 == 0:
             print("ngram counting: {}/{}".format(debug[0], debug[1]), file=sys.stderr)
     FEs={}
-    debug=[0, len(spacy_sentences)]
+    debug=[0, len(sentences)]
     languages={'ja': 'ja_core_news_lg', 'fi': '../train_spacy/fi-ner/model-last/'}
     nlp=spacy.load(languages[language], disable=['textcat'])
-    for sentence in sentences:
+    for j, sentence in enumerate(sentences):
         sentence=nlp(sentence)
         root_flag=False
         stack=[]
@@ -113,7 +112,7 @@ def extract_FEs(sentences, language, minimum_frequency=3):
             if FE not in FEs:
                 FEs[FE]=0
             FEs[FE]+=1
-        debug[0]=i
+        debug[0]=j
         if i % 100==0:
             print("FE counting: {}/{}".format(debug[0], debug[1]), file=sys.stderr)
     for k in list(FEs.keys()):
